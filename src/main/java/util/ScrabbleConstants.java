@@ -17,7 +17,7 @@ public class ScrabbleConstants {
     public static final int CONSECUTIVE_PASSES_TO_END = 6;
 
     // Resources
-    public static final String DEFAULT_DICTIONARY = "src/main/resources/edu/leicester/scrabble/Dictionary.txt";
+    public static final String DEFAULT_DICTIONARY = "C:\\Users\\youfe\\Desktop\\Scrabble2.0\\src\\main\\resources\\Dictionary.txt";
 
     // AI difficulty levels
     public static final int AI_EASY = 1;

@@ -1,24 +1,22 @@
 package model;
 
-import model.Player;
-import model.Tile;
+import util.Direction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Represents a move in the Scrabble game.
+ * A move can be placing tiles, exchanging tiles, or passing.
+ */
 public class Move {
 
     public enum Type {
         PLACE,
         EXCHANGE, //swap tiles out in bag
         PASS
-    }
-
-    public enum Direction {
-        HORIZONTAL,
-        VERTICAL
     }
 
     private final Player player;
@@ -31,16 +29,30 @@ public class Move {
     private List<String> formedWords;
     private final Map<String, Object> metadata;
 
+    /**
+     * Creates a new move.
+     *
+     * @param player the player making the move
+     * @param type the type of move
+     */
     public Move(Player player, Type type) {
         this.player = player;
         this.type = type;
         this.tiles = new ArrayList<>();
-        List<Character> placedLetters = new ArrayList<>();
         this.formedWords = new ArrayList<>();
         this.score = 0;
         this.metadata = new HashMap<>();
     }
 
+    /**
+     * Creates a placement move.
+     *
+     * @param player the player making the move
+     * @param startRow the starting row
+     * @param startCol the starting column
+     * @param direction the direction of placement
+     * @return the move
+     */
     public static Move createPlaceMove(Player player, int startRow, int startCol, Direction direction) {
         Move move = new Move(player, Type.PLACE);
         move.startRow = startRow;
@@ -49,12 +61,25 @@ public class Move {
         return move;
     }
 
+    /**
+     * Creates an exchange move.
+     *
+     * @param player the player making the move
+     * @param tilesToExchange the tiles to exchange
+     * @return the move
+     */
     public static Move createExchangeMove(Player player, List<Tile> tilesToExchange) {
         Move move = new Move(player, Type.EXCHANGE);
         move.tiles.addAll(tilesToExchange);
         return move;
     }
 
+    /**
+     * Creates a pass move.
+     *
+     * @param player the player making the move
+     * @return the move
+     */
     public static Move createPassMove(Player player) {
         return new Move(player, Type.PASS);
     }
@@ -71,6 +96,10 @@ public class Move {
         return direction;
     }
 
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
     public int getStartRow() {
         return startRow;
     }
@@ -82,7 +111,6 @@ public class Move {
     public List<Tile> getTiles() {
         return new ArrayList<>(tiles);
     }
-
 
     public void addTiles(List<Tile> tilesToAdd) {
         tiles.addAll(tilesToAdd);
@@ -108,6 +136,9 @@ public class Move {
         metadata.put(key, value);
     }
 
+    public Object getMetadata(String key) {
+        return metadata.get(key);
+    }
 
     @Override
     public String toString() {
@@ -122,7 +153,19 @@ public class Move {
                     sb.append(tiles.get(i).getLetter());
                 }
                 sb.append(" at (").append(startRow + 1).append(", ").append(startCol + 1).append(")");
-                sb.append(" ").append(direction == Direction.HORIZONTAL ? "horizontally" : "vertically");
+
+                String directionText;
+                if (direction == Direction.HORIZONTAL) {
+                    directionText = "horizontally";
+                } else if (direction == Direction.VERTICAL) {
+                    directionText = "vertically";
+                } else if (direction == Direction.HORIZONTAL_REVERSE) {
+                    directionText = "horizontally (reversed)";
+                } else {
+                    directionText = "vertically (reversed)";
+                }
+                sb.append(" ").append(directionText);
+
                 if (!formedWords.isEmpty()) {
                     sb.append(" forming: ");
                     for (int i = 0; i < formedWords.size(); i++) {
