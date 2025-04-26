@@ -18,13 +18,9 @@ public class ScrabbleApp {
         scanner = new Scanner(System.in);
 
         try {
-            // Ask if bidirectional words should be allowed
             System.out.println("Welcome to Scrabble 2.0!");
-            System.out.println("Would you like to allow bidirectional words? (y/n)");
-            boolean allowBidirectional = scanner.nextLine().trim().toLowerCase().startsWith("y");
 
-            // Create the game
-            game = new Game(allowBidirectional);
+            game = new Game();
 
             // Set up players
             setupPlayers();
@@ -141,7 +137,7 @@ public class ScrabbleApp {
     private static void handlePlaceTiles(Player player) {
         System.out.println("Enter row, column, direction (H/V/HR/VR) and word to place");
         System.out.println("Example: 7 7 H WORD");
-        System.out.println("Direction can be H (horizontal), V (vertical), HR (horizontal reverse), VR (vertical reverse)");
+        System.out.println("Direction can be H (horizontal), V (vertical)");
 
         String input = scanner.nextLine().trim();
         String[] parts = input.split("\\s+", 4);
@@ -164,14 +160,9 @@ public class ScrabbleApp {
                 case "V":
                     direction = Direction.VERTICAL;
                     break;
-                case "HR":
-                    direction = Direction.HORIZONTAL_REVERSE;
-                    break;
-                case "VR":
-                    direction = Direction.VERTICAL_REVERSE;
-                    break;
+
                 default:
-                    System.out.println("Invalid direction. Please use H, V, HR, or VR.");
+                    System.out.println("Invalid direction. Please use H, V. ");
                     handlePlaceTiles(player);
                     return;
             }

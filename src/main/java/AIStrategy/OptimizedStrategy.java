@@ -90,15 +90,9 @@ public class OptimizedStrategy implements PlayerStrategy {
                 int row = anchor.x;
                 int col = anchor.y;
 
-                // Try horizontal and vertical placements
+                // Try horizontal and vertical placements only
                 tryPlacementsAtAnchor(game, player, row, col, Direction.HORIZONTAL, possibleMoves);
                 tryPlacementsAtAnchor(game, player, row, col, Direction.VERTICAL, possibleMoves);
-
-                // If bidirectional words are allowed
-                if (game.allowsBidirectionalWords()) {
-                    tryPlacementsAtAnchor(game, player, row, col, Direction.HORIZONTAL_REVERSE, possibleMoves);
-                    tryPlacementsAtAnchor(game, player, row, col, Direction.VERTICAL_REVERSE, possibleMoves);
-                }
             }
         }
 
@@ -116,8 +110,7 @@ public class OptimizedStrategy implements PlayerStrategy {
         try {
             Rack rack = player.getRack();
             Board board = game.getBoard();
-            MoveValidator validator = new MoveValidator(board, game.getDictionary(),
-                    game.allowsBidirectionalWords());
+            MoveValidator validator = new MoveValidator(board, game.getDictionary());
             String rackLetters = getTilesAsString(rack.getTiles());
 
             // Use GADDAG to find all valid words that could start/pass through this anchor point
@@ -151,9 +144,9 @@ public class OptimizedStrategy implements PlayerStrategy {
                     int endRow = startRow;
                     int endCol = startCol;
                     if (direction.isHorizontal()) {
-                        endCol = startCol + (direction.isReverse() ? -word.length() + 1 : word.length() - 1);
+                        endCol = startCol + word.length() - 1;
                     } else {
-                        endRow = startRow + (direction.isReverse() ? -word.length() + 1 : word.length() - 1);
+                        endRow = startRow + word.length() - 1;
                     }
 
                     // Skip if end position is off the board
@@ -218,8 +211,7 @@ public class OptimizedStrategy implements PlayerStrategy {
                         move.addTiles(tilesForWord);
 
                         // Validate move
-                        MoveValidator validator = new MoveValidator(game.getBoard(), dictionary,
-                                game.allowsBidirectionalWords());
+                        MoveValidator validator = new MoveValidator(game.getBoard(), dictionary);
                         if (validator.isValidPlaceMove(move)) {
                             // Create a temporary board to score the move
                             Board tempBoard = createTempBoardWithMove(game.getBoard(), move);
@@ -251,8 +243,7 @@ public class OptimizedStrategy implements PlayerStrategy {
                         move.addTiles(tilesForWord);
 
                         // Validate move
-                        MoveValidator validator = new MoveValidator(game.getBoard(), dictionary,
-                                game.allowsBidirectionalWords());
+                        MoveValidator validator = new MoveValidator(game.getBoard(), dictionary);
                         if (validator.isValidPlaceMove(move)) {
                             // Create a temporary board to score the move
                             Board tempBoard = createTempBoardWithMove(game.getBoard(), move);
@@ -614,9 +605,9 @@ public class OptimizedStrategy implements PlayerStrategy {
 
             // Move to next position
             if (move.getDirection().isHorizontal()) {
-                col += move.getDirection().isReverse() ? -1 : 1;
+                col++;
             } else {
-                row += move.getDirection().isReverse() ? -1 : 1;
+                row++;
             }
         }
 
@@ -676,9 +667,9 @@ public class OptimizedStrategy implements PlayerStrategy {
             while (row >= 0 && row < Board.SIZE && col >= 0 && col < Board.SIZE &&
                     tempBoard.getSquare(row, col).hasTile()) {
                 if (direction.isHorizontal()) {
-                    col += direction.isReverse() ? -1 : 1;
+                    col++;
                 } else {
-                    row += direction.isReverse() ? -1 : 1;
+                    row++;
                 }
             }
 
@@ -692,9 +683,9 @@ public class OptimizedStrategy implements PlayerStrategy {
 
             // Move to next position
             if (direction.isHorizontal()) {
-                col += direction.isReverse() ? -1 : 1;
+                col++;
             } else {
-                row += direction.isReverse() ? -1 : 1;
+                row++;
             }
         }
 

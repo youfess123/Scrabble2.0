@@ -86,7 +86,7 @@ public class ScrabbleFX extends Application {
     private void initializeGame() {
         try {
             // Create game with bidirectional words enabled
-            game = new Game(true);
+            game = new Game();
 
             // Add a human player
             Player humanPlayer = new Player("Human");

@@ -49,7 +49,6 @@ public class Game {
         this.moveValidator = new MoveValidator(board, dictionary);
         this.scoreCalculator = new ScoreCalculator(board, moveValidator);
     }
-
     /**
      * Adds a player to the game.
      *
