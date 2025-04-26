@@ -7,48 +7,21 @@ import util.PlayerStrategy;
 
 /**
  * Represents a computer-controlled player in Scrabble.
- * Uses different strategies based on difficulty level.
+ * Uses the optimized GADDAG-based strategy.
  */
 public class ComputerPlayer {
     private final Player player;
     private PlayerStrategy strategy;
 
     /**
-     * Creates a new computer player with the specified player and difficulty level.
+     * Creates a new computer player with the specified player.
      *
      * @param player the player to control
-     * @param difficultyLevel the difficulty level (1=Easy, 2=Medium, 3=Hard)
      */
-    public ComputerPlayer(Player player, int difficultyLevel) {
+    public ComputerPlayer(Player player) {
         this.player = player;
         player.setComputer(true);
-        setDifficultyLevel(difficultyLevel);
-    }
-
-    /**
-     * Sets the difficulty level for this computer player.
-     *
-     * @param difficultyLevel the difficulty level (1=Easy, 2=Medium, 3=Hard)
-     */
-    public void setDifficultyLevel(int difficultyLevel) {
-        // Ensure difficulty is within valid range
-        int level = Math.max(1, Math.min(3, difficultyLevel));
-
-        // Create the appropriate strategy based on difficulty level
-        switch (level) {
-            case 1:
-                this.strategy = new EasyStrategy();
-                break;
-            case 2:
-                this.strategy = new MediumStrategy();
-                break;
-            case 3:
-                this.strategy = new HardStrategy();
-                break;
-            default:
-                this.strategy = new MediumStrategy();
-        }
-
+        this.strategy = new OptimizedStrategy();
         System.out.println("Computer player using strategy: " + strategy.getName());
     }
 

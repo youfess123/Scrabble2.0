@@ -1,11 +1,14 @@
 package model;
 
+import util.ScrabbleConstants;
+
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
  * GADDAG data structure for Scrabble word validation and word finding.
- * Simplified file loading while maintaining full functionality.
+ * Enhanced with improved word-finding capabilities for AI strategies.
  */
 public class Gaddag {
     private static final char DELIMITER = '+';
@@ -20,7 +23,7 @@ public class Gaddag {
         this.root = new Node();
         this.wordSet = new HashSet<>();
         this.alphabetMap = new HashMap<>();
-        
+
         try {
             loadFromFile();
         } catch (IOException e) {
@@ -35,13 +38,15 @@ public class Gaddag {
      * @throws IOException if file cannot be read
      */
     private void loadFromFile() throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader("dictionary.txt"))) {
+        FileReader dictionary = new FileReader("src/main/resources/Dictionary.txt");
+        try (BufferedReader reader = new BufferedReader(dictionary)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 addWord(line);
             }
         }
     }
+
 
     /**
      * Adds a word to both the wordSet and GADDAG structure.
@@ -143,6 +148,7 @@ public class Gaddag {
 
     /**
      * Gets words that can be formed from a rack given an anchor and direction constraints.
+     * This is used by the AI to find potential moves.
      *
      * @param rack Letters available in the rack
      * @param anchor Anchor character
@@ -175,6 +181,37 @@ public class Gaddag {
         dfs(startNode, currentWord, rackMap, words, allowLeft, allowRight, false);
 
         return words;
+    }
+
+    /**
+     * Find all possible words that can be formed from the given rack.
+     * This is an enhanced method specifically for the AI to efficiently
+     * find all possible words without needing to try every letter combination.
+     *
+     * @param rack Letters available in the rack
+     * @return Set of possible words that can be formed
+     */
+    public Set<String> getAllPossibleWords(String rack) {
+        Set<String> result = new HashSet<>();
+
+        // Try each letter as an anchor
+        for (char letter : rack.toCharArray()) {
+            // Try to find words with this letter in any position
+            Set<String> wordsWithLetter = getWordsFrom(rack, letter, true, true);
+            result.addAll(wordsWithLetter);
+        }
+
+        // Also try with blank tiles (if any)
+        if (rack.contains("*")) {
+            for (char letter = 'A'; letter <= 'Z'; letter++) {
+                // Replace one blank with this letter and try
+                String modifiedRack = rack.replaceFirst("\\*", String.valueOf(letter));
+                Set<String> wordsWithBlank = getWordsFrom(modifiedRack, letter, true, true);
+                result.addAll(wordsWithBlank);
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -216,8 +253,124 @@ public class Gaddag {
         }
     }
 
-    // Additional methods from the original GADDAG implementation would go here
-    // (validateMove, findValidWordsAt, etc.)
+    /**
+     * Finds words that can start with or contain the given prefix.
+     * Useful for finding words that can be played at specific board positions.
+     *
+     * @param prefix Letters already on the board
+     * @param rack Available letters in the rack
+     * @param allowExtendLeft Whether to allow extending to the left of prefix
+     * @param allowExtendRight Whether to allow extending to the right of prefix
+     * @return Set of valid words that can be formed
+     */
+    public Set<String> getWordsWithPrefix(String prefix, String rack,
+                                          boolean allowExtendLeft, boolean allowExtendRight) {
+        Set<String> words = new HashSet<>();
+        prefix = prefix.toUpperCase();
+        rack = rack.toUpperCase();
+
+        // Convert rack to a letter count map
+        Map<Character, Integer> rackMap = new HashMap<>();
+        for (char c : rack.toCharArray()) {
+            rackMap.put(c, rackMap.getOrDefault(c, 0) + 1);
+        }
+
+        // If prefix is empty, just find all possible words
+        if (prefix.isEmpty()) {
+            for (char letter : rack.toCharArray()) {
+                StringBuilder currentWord = new StringBuilder();
+                currentWord.append(letter);
+
+                // Remove the letter from available tiles
+                rackMap.put(letter, rackMap.get(letter) - 1);
+
+                // Find all nodes with this letter
+                for (Map.Entry<ArcLetter, Node> entry : root.getChildren().entrySet()) {
+                    if (entry.getKey().getChar() == letter) {
+                        dfs(entry.getValue(), currentWord, rackMap, words, allowExtendLeft, allowExtendRight, false);
+                        break;
+                    }
+                }
+
+                // Put the letter back
+                rackMap.put(letter, rackMap.getOrDefault(letter, 0) + 1);
+            }
+            return words;
+        }
+
+        // Otherwise, find words containing or starting with prefix
+        Node current = root;
+
+        // Handle left extension first (if allowed)
+        if (allowExtendLeft) {
+            // Start with delimiter + prefix
+            String path = DELIMITER + prefix;
+
+            // Navigate to the node representing this path
+            boolean pathFound = true;
+            for (char c : path.toCharArray()) {
+                ArcLetter arcLetter = c == DELIMITER ? new Delimiter() : getArcLetter(c);
+                Node next = null;
+                for (Map.Entry<ArcLetter, Node> entry : current.getChildren().entrySet()) {
+                    if (entry.getKey().getChar() == c) {
+                        next = entry.getValue();
+                        break;
+                    }
+                }
+
+                if (next == null) {
+                    pathFound = false;
+                    break;
+                }
+                current = next;
+            }
+
+            // If found, do DFS from this node
+            if (pathFound) {
+                StringBuilder currentWord = new StringBuilder(prefix);
+                dfs(current, currentWord, rackMap, words, false, allowExtendRight, true);
+            }
+        }
+
+        // Handle right extension
+        if (allowExtendRight) {
+            // For right extension, we need to find all paths that could form our prefix
+            for (int i = 0; i <= prefix.length(); i++) {
+                String reversed = new StringBuilder(prefix.substring(0, i)).reverse().toString();
+                String forward = prefix.substring(i);
+                String path = reversed + DELIMITER + forward;
+
+                current = root;
+                boolean pathFound = true;
+
+                // Navigate to the path
+                for (char c : path.toCharArray()) {
+                    ArcLetter arcLetter = c == DELIMITER ? new Delimiter() : getArcLetter(c);
+                    Node next = null;
+                    for (Map.Entry<ArcLetter, Node> entry : current.getChildren().entrySet()) {
+                        if (entry.getKey().getChar() == c) {
+                            next = entry.getValue();
+                            break;
+                        }
+                    }
+
+                    if (next == null) {
+                        pathFound = false;
+                        break;
+                    }
+                    current = next;
+                }
+
+                // If found, do DFS
+                if (pathFound) {
+                    StringBuilder currentWord = new StringBuilder(prefix);
+                    dfs(current, currentWord, rackMap, words, false, true, forward.isEmpty());
+                }
+            }
+        }
+
+        return words;
+    }
 
     /**
      * Node class for the GADDAG trie structure.

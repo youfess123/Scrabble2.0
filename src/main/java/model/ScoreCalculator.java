@@ -11,12 +11,12 @@ import java.util.Set;
 
 /**
  * Calculates scores for moves in a Scrabble game.
- * This class is responsible for computing the score of a move
- * based on the board state, premium squares, and game rules.
+ * This fixed version ensures correct premium square handling and multiplier application.
  */
 public class ScoreCalculator {
     private final Board board;
     private final MoveValidator moveValidator;
+    private static final boolean DEBUG_SCORING = true; // Set to true to see detailed scoring logs
 
     /**
      * Creates a new ScoreCalculator.
@@ -41,27 +41,44 @@ public class ScoreCalculator {
         List<String> formedWords = move.getFormedWords();
         List<Point> newTilePositions = moveValidator.findNewTilePositions(tempBoard, move);
 
+        if (DEBUG_SCORING) {
+            System.out.println("Calculating score for move: " + move);
+            System.out.println("Formed words: " + formedWords);
+            System.out.println("New tile positions: " + newTilePositions.size());
+        }
+
         // Track which premium squares have been used
         Set<Point> usedPremiumSquares = new HashSet<>();
 
+        // Calculate score for each formed word
         for (String word : formedWords) {
             int wordScore = calculateWordScore(tempBoard, word, move.getDirection(), newTilePositions, usedPremiumSquares);
+
+            if (DEBUG_SCORING) {
+                System.out.println("Word: " + word + ", Score: " + wordScore);
+            }
+
             totalScore += wordScore;
-            System.out.println("Word: " + word + ", Score: " + wordScore);
         }
 
         // Add bonus points for using all 7 tiles (bingo)
         if (move.getTiles().size() == 7) {
             totalScore += ScrabbleConstants.BINGO_BONUS;
-            System.out.println("Bingo bonus: " + ScrabbleConstants.BINGO_BONUS);
+            if (DEBUG_SCORING) {
+                System.out.println("Bingo bonus: " + ScrabbleConstants.BINGO_BONUS);
+            }
         }
 
-        System.out.println("Total move score: " + totalScore);
+        if (DEBUG_SCORING) {
+            System.out.println("Total move score: " + totalScore);
+        }
+
         return totalScore;
     }
 
     /**
      * Calculates the score for a single word.
+     * This fixed implementation ensures premium squares are properly applied.
      *
      * @param tempBoard the board with the move applied
      * @param word the word
@@ -72,6 +89,10 @@ public class ScoreCalculator {
      */
     private int calculateWordScore(Board tempBoard, String word, Direction direction,
                                    List<Point> newTilePositions, Set<Point> usedPremiumSquares) {
+        if (DEBUG_SCORING) {
+            System.out.println("Calculating score for word: " + word);
+        }
+
         int wordScore = 0;
         int wordMultiplier = 1;
 
@@ -86,6 +107,10 @@ public class ScoreCalculator {
         Point wordPos = wordPositions.get(0);
         int startRow = wordPos.x;
         int startCol = wordPos.y;
+
+        if (DEBUG_SCORING) {
+            System.out.println("  Starting position: (" + startRow + ", " + startCol + ")");
+        }
 
         int currentRow = startRow;
         int currentCol = startCol;
@@ -105,26 +130,47 @@ public class ScoreCalculator {
             boolean isNewTile = newTilePositions.contains(currentPoint);
 
             Tile tile = square.getTile();
+            if (tile == null) {
+                // This shouldn't happen for a valid word
+                System.out.println("Error: No tile found at " + currentPoint + " for word " + word);
+                break;
+            }
+
             int letterValue = tile.getValue();
+
+            if (DEBUG_SCORING) {
+                System.out.println("  Letter: " + tile.getLetter() + ", Value: " + letterValue +
+                        ", New tile: " + isNewTile);
+            }
 
             // Apply letter and word multipliers for new tiles on premium squares
             if (isNewTile && !board.getSquare(currentRow, currentCol).isSquareTypeUsed()) {
+                Square.SquareType squareType = board.getSquare(currentRow, currentCol).getSquareType();
+
+                if (DEBUG_SCORING) {
+                    System.out.println("  Square type: " + squareType + " at " + currentPoint);
+                }
+
                 // Apply letter multipliers
-                if (square.getSquareType() == Square.SquareType.DOUBLE_LETTER) {
+                if (squareType == Square.SquareType.DOUBLE_LETTER) {
                     letterValue *= 2;
-                } else if (square.getSquareType() == Square.SquareType.TRIPLE_LETTER) {
+                    if (DEBUG_SCORING) System.out.println("  Double letter applied: " + letterValue);
+                } else if (squareType == Square.SquareType.TRIPLE_LETTER) {
                     letterValue *= 3;
+                    if (DEBUG_SCORING) System.out.println("  Triple letter applied: " + letterValue);
                 }
 
                 // Track word multipliers (to be applied later)
                 if (!usedPremiumSquares.contains(currentPoint)) {
-                    if (square.getSquareType() == Square.SquareType.DOUBLE_WORD ||
-                            square.getSquareType() == Square.SquareType.CENTER) {
+                    if (squareType == Square.SquareType.DOUBLE_WORD ||
+                            squareType == Square.SquareType.CENTER) {
                         wordMultiplier *= 2;
                         usedPremiumSquares.add(currentPoint);
-                    } else if (square.getSquareType() == Square.SquareType.TRIPLE_WORD) {
+                        if (DEBUG_SCORING) System.out.println("  Double word applied, multiplier now: " + wordMultiplier);
+                    } else if (squareType == Square.SquareType.TRIPLE_WORD) {
                         wordMultiplier *= 3;
                         usedPremiumSquares.add(currentPoint);
+                        if (DEBUG_SCORING) System.out.println("  Triple word applied, multiplier now: " + wordMultiplier);
                     }
                 }
             }
@@ -148,7 +194,15 @@ public class ScoreCalculator {
         }
 
         // Apply word multiplier
-        return wordScore * wordMultiplier;
+        int finalScore = wordScore * wordMultiplier;
+
+        if (DEBUG_SCORING) {
+            System.out.println("  Word score before multiplier: " + wordScore);
+            System.out.println("  Word multiplier: " + wordMultiplier);
+            System.out.println("  Final word score: " + finalScore);
+        }
+
+        return finalScore;
     }
 
     /**

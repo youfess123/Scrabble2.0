@@ -1,0 +1,138 @@
+/* Scrabble FX Stylesheet */
+
+/* General UI settings */
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-font-size: 12px;
+    -fx-background-color: #f0f0f0;
+}
+
+/* Label styling */
+.label {
+    -fx-font-weight: bold;
+}
+
+/* Button styling */
+.button {
+    -fx-background-color: #4a7ba7;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 3;
+}
+
+.button:hover {
+    -fx-background-color: #5a8bb7;
+}
+
+.button:pressed {
+    -fx-background-color: #3a6b97;
+}
+
+.button:disabled {
+    -fx-background-color: #cccccc;
+    -fx-text-fill: #888888;
+}
+
+/* Board button styling */
+.board-button {
+    -fx-font-size: 11px;
+    -fx-alignment: center;
+    -fx-content-display: center;
+    -fx-text-alignment: center;
+    -fx-border-color: #333333;
+    -fx-border-width: 0.5;
+}
+
+/* Different square types */
+.normal-square {
+    -fx-background-color: #e8e8e8;
+}
+
+.tw-square {
+    -fx-background-color: #e53935;  /* Red */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.dw-square {
+    -fx-background-color: #ffcdd2;  /* Light red */
+    -fx-text-fill: #d32f2f;
+    -fx-font-weight: bold;
+}
+
+.tl-square {
+    -fx-background-color: #1e88e5;  /* Blue */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.dl-square {
+    -fx-background-color: #bbdefb;  /* Light blue */
+    -fx-text-fill: #1565c0;
+    -fx-font-weight: bold;
+}
+
+.center-square {
+    -fx-background-color: #ffcdd2;  /* Light red, same as DW */
+    -fx-text-fill: #d32f2f;
+    -fx-font-weight: bold;
+}
+
+/* Tile styling */
+.tile {
+    -fx-background-color: #f9efc7;  /* Wooden color */
+    -fx-text-fill: #000000;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 3, 0, 0, 0);
+}
+
+.temp-tile {
+    -fx-background-color: #c8e6c9;  /* Light green */
+    -fx-text-fill: #000000;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 3, 0, 0, 0);
+}
+
+/* Rack button styling */
+.rack-button {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-content-display: center;
+    -fx-text-alignment: center;
+    -fx-background-radius: 3;
+    -fx-border-color: #333333;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+}
+
+.rack-tile {
+    -fx-background-color: #f9efc7;  /* Wooden color */
+    -fx-text-fill: #000000;
+}
+
+.selected-tile {
+    -fx-background-color: #c8e6c9;  /* Light green */
+    -fx-text-fill: #000000;
+    -fx-effect: innershadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 0);
+}
+
+.empty-rack {
+    -fx-background-color: #d9d9d9;
+}
+
+/* Text area styling */
+.text-area {
+    -fx-font-family: monospace;
+}
+
+.text-area .content {
+    -fx-background-color: #ffffff;
+}
+
+/* Separator styling */
+.separator {
+    -fx-padding: 5 0 5 0;
+}

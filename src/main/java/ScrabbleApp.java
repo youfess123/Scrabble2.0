@@ -75,17 +75,12 @@ public class ScrabbleApp {
         }
 
         // Add a computer player
-        System.out.println("Adding a computer player. Select difficulty:");
-        System.out.println("1 - Easy");
-        System.out.println("2 - Medium");
-        System.out.println("3 - Hard");
-        int difficulty = readInt(1, 3);
-
+        System.out.println("Adding a computer player (uses optimized GADDAG-based strategy)");
         Player computerPlayer = new Player("Computer", true);
         game.addPlayer(computerPlayer);
 
         // Create the AI controller
-        new ComputerPlayer(computerPlayer, difficulty);
+        new ComputerPlayer(computerPlayer);
     }
 
     /**
@@ -308,7 +303,7 @@ public class ScrabbleApp {
         // Find the computer player's controller
         for (Player p : game.getPlayers()) {
             if (p.isComputer()) {
-                ComputerPlayer computerPlayer = new ComputerPlayer(p, 2); // Assuming difficulty 2
+                ComputerPlayer computerPlayer = new ComputerPlayer(p);
                 Move move = computerPlayer.generateMove(game);
                 boolean success = game.executeMove(move);
 

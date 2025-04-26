@@ -9,12 +9,13 @@ import java.util.List;
 
 /**
  * Validates moves in a Scrabble game according to the rules.
- * Enhanced with support for bidirectional word reading.
+ * Enhanced with support for bidirectional word reading and improved validation.
  */
 public class MoveValidator {
     private final Board board;
     private final Gaddag dictionary;
     private final boolean allowBidirectionalWords;
+    private static final boolean DEBUG_VALIDATION = true; // Set to true to see detailed validation logs
 
     /**
      * Creates a new MoveValidator.
@@ -52,6 +53,11 @@ public class MoveValidator {
         int startCol = move.getStartCol();
         Direction direction = move.getDirection();
         List<Tile> tiles = move.getTiles();
+
+        if (DEBUG_VALIDATION) {
+            System.out.println("Validating move: " + startRow + "," + startCol +
+                    " direction=" + direction + " tiles=" + getTilesAsString(tiles));
+        }
 
         if (tiles.isEmpty()) {
             System.out.println("Invalid move: No tiles to place");
@@ -138,6 +144,11 @@ public class MoveValidator {
         List<Point> newTilePositions = findNewTilePositions(tempBoard, move);
         boolean directionReversed = false;
 
+        if (DEBUG_VALIDATION) {
+            System.out.println("Validating words for move at " + move.getStartRow() + "," +
+                    move.getStartCol() + " with " + newTilePositions.size() + " new tiles");
+        }
+
         // If no new tiles were placed, this isn't a valid move
         if (newTilePositions.isEmpty()) {
             System.out.println("Invalid move: No tiles placed");
@@ -151,8 +162,17 @@ public class MoveValidator {
         // Find the main word in forward direction
         String mainWord = getWordInDirection(tempBoard, row, col, direction);
 
+        if (DEBUG_VALIDATION) {
+            System.out.println("Main word in forward direction: " + mainWord);
+        }
+
         // Check if the main word is valid in the forward direction
         boolean mainWordValid = mainWord.length() >= 2 && dictionary.isValidWord(mainWord);
+
+        if (DEBUG_VALIDATION) {
+            System.out.println("Is main word valid in forward direction? " + mainWordValid +
+                    " (dictionary contains: " + dictionary.isValidWord(mainWord) + ")");
+        }
 
         // If bidirectional words are allowed and the word isn't valid forward, try backward
         String reversedMainWord = null;
@@ -161,6 +181,11 @@ public class MoveValidator {
         if (allowBidirectionalWords && !mainWordValid && mainWord.length() >= 2) {
             reversedMainWord = new StringBuilder(mainWord).reverse().toString();
             reversedWordValid = dictionary.isValidWord(reversedMainWord);
+
+            if (DEBUG_VALIDATION) {
+                System.out.println("Reversed main word: " + reversedMainWord +
+                        ", valid: " + reversedWordValid);
+            }
         }
 
         if (!mainWordValid && !reversedWordValid) {
@@ -199,13 +224,27 @@ public class MoveValidator {
             Direction crossDirection = direction.isHorizontal() ? Direction.VERTICAL : Direction.HORIZONTAL;
             String crossWord = getWordInDirection(tempBoard, p.x, p.y, crossDirection);
 
+            if (DEBUG_VALIDATION) {
+                System.out.println("Cross word at " + p.x + "," + p.y + ": " + crossWord);
+            }
+
             if (crossWord.length() >= 2) {
                 // For crossing words, we apply the same bidirectional logic if enabled
                 boolean crossWordValid = dictionary.isValidWord(crossWord);
 
+                if (DEBUG_VALIDATION) {
+                    System.out.println("Is cross word valid? " + crossWordValid +
+                            " (dictionary contains: " + dictionary.isValidWord(crossWord) + ")");
+                }
+
                 if (!crossWordValid && allowBidirectionalWords) {
                     String reversedCrossWord = new StringBuilder(crossWord).reverse().toString();
                     boolean reversedCrossValid = dictionary.isValidWord(reversedCrossWord);
+
+                    if (DEBUG_VALIDATION) {
+                        System.out.println("Reversed cross word: " + reversedCrossWord +
+                                ", valid: " + reversedCrossValid);
+                    }
 
                     if (reversedCrossValid) {
                         crossWord = reversedCrossWord;
@@ -222,6 +261,10 @@ public class MoveValidator {
 
                 formedWords.add(crossWord);
             }
+        }
+
+        if (DEBUG_VALIDATION) {
+            System.out.println("Validation successful! Formed words: " + formedWords);
         }
 
         return new WordValidationResult(formedWords, directionReversed);
@@ -402,23 +445,26 @@ public class MoveValidator {
             while (currentRow < Board.SIZE && currentCol < Board.SIZE &&
                     tempBoard.getSquare(currentRow, currentCol).hasTile()) {
                 if (direction.isHorizontal()) {
-                    currentCol++;
+                    currentCol += direction.isReverse() ? -1 : 1;
                 } else {
-                    currentRow++;
+                    currentRow += direction.isReverse() ? -1 : 1;
                 }
             }
 
-            if (currentRow >= Board.SIZE || currentCol >= Board.SIZE) {
+            // Check bounds
+            if (currentRow < 0 || currentRow >= Board.SIZE ||
+                    currentCol < 0 || currentCol >= Board.SIZE) {
                 System.out.println("Invalid move: Placement extends beyond board");
                 return null;
             }
 
             tempBoard.placeTile(currentRow, currentCol, tile);
 
+            // Move to next position
             if (direction.isHorizontal()) {
-                currentCol++;
+                currentCol += direction.isReverse() ? -1 : 1;
             } else {
-                currentRow++;
+                currentRow += direction.isReverse() ? -1 : 1;
             }
         }
 
@@ -526,11 +572,28 @@ public class MoveValidator {
      * Checks if a position has an adjacent tile.
      */
     private boolean hasAdjacentTile(int row, int col) {
+        // Make sure position is within board boundaries
+        if (row < 0 || row >= Board.SIZE || col < 0 || col >= Board.SIZE) {
+            return false;
+        }
+
+        // Check all four adjacent positions
         if (row > 0 && board.getSquare(row - 1, col).hasTile()) return true;
         if (row < Board.SIZE - 1 && board.getSquare(row + 1, col).hasTile()) return true;
         if (col > 0 && board.getSquare(row, col - 1).hasTile()) return true;
         if (col < Board.SIZE - 1 && board.getSquare(row, col + 1).hasTile()) return true;
 
         return false;
+    }
+
+    /**
+     * Helper method to convert a list of tiles to a string for debugging.
+     */
+    private String getTilesAsString(List<Tile> tiles) {
+        StringBuilder sb = new StringBuilder();
+        for (Tile tile : tiles) {
+            sb.append(tile.getLetter());
+        }
+        return sb.toString();
     }
 }
