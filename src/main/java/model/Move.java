@@ -154,16 +154,7 @@ public class Move {
                 }
                 sb.append(" at (").append(startRow + 1).append(", ").append(startCol + 1).append(")");
 
-                String directionText;
-                if (direction == Direction.HORIZONTAL) {
-                    directionText = "horizontally";
-                } else if (direction == Direction.VERTICAL) {
-                    directionText = "vertically";
-                } else if (direction == Direction.HORIZONTAL_REVERSE) {
-                    directionText = "horizontally (reversed)";
-                } else {
-                    directionText = "vertically (reversed)";
-                }
+                String directionText = direction.isHorizontal() ? "horizontally" : "vertically";
                 sb.append(" ").append(directionText);
 
                 if (!formedWords.isEmpty()) {

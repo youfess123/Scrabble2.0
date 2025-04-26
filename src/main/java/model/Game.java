@@ -22,9 +22,6 @@ public class Game {
     private final List<Move> moveHistory;
     private static final int EMPTY_RACK_BONUS = 50;
 
-    // Game settings
-    private final boolean allowBidirectionalWords;
-
     // Components for move validation and scoring
     private final MoveValidator moveValidator;
     private final ScoreCalculator scoreCalculator;
@@ -36,10 +33,9 @@ public class Game {
     /**
      * Constructs a new Game with the specified dictionary.
      *
-     * @param allowBidirectionalWords whether to allow bidirectional word reading
      * @throws IOException if the dictionary cannot be loaded
      */
-    public Game(boolean allowBidirectionalWords) throws IOException {
+    public Game() throws IOException {
         this.board = new Board();
         this.tileBag = new TileBag();
         this.players = new ArrayList<>();
@@ -48,20 +44,10 @@ public class Game {
         this.gameOver = false;
         this.consecutivePasses = 0;
         this.moveHistory = new ArrayList<>();
-        this.allowBidirectionalWords = allowBidirectionalWords;
 
         // Initialize validator and score calculator
-        this.moveValidator = new MoveValidator(board, dictionary, allowBidirectionalWords);
+        this.moveValidator = new MoveValidator(board, dictionary);
         this.scoreCalculator = new ScoreCalculator(board, moveValidator);
-    }
-
-    /**
-     * Constructs a new Game with default settings.
-     *
-     * @throws IOException if the dictionary cannot be loaded
-     */
-    public Game() throws IOException {
-        this(false); // Default to standard Scrabble rules (no bidirectional words)
     }
 
     /**
@@ -183,15 +169,6 @@ public class Game {
     }
 
     /**
-     * Returns whether bidirectional words are allowed in this game.
-     *
-     * @return true if bidirectional words are allowed
-     */
-    public boolean allowsBidirectionalWords() {
-        return allowBidirectionalWords;
-    }
-
-    /**
      * Executes a move.
      *
      * @param move the move to execute
@@ -249,8 +226,6 @@ public class Game {
 
     /**
      * Executes a placement move.
-     * The enhanced approach allows players to place tiles anywhere during setup,
-     * and supports bidirectional word reading.
      *
      * @param move the placement move to execute
      * @return true if the move was successfully executed
@@ -471,8 +446,8 @@ public class Game {
      * This allows the player to experiment with placements before committing.
      *
      * @param rackIndex the index of the tile in the player's rack
-     * @param row the row to place the tile
-     * @param col the column to place the tile
+     * @param row       the row to place the tile
+     * @param col       the column to place the tile
      * @return true if the tile was placed successfully
      */
     public boolean placeTileTemporarily(int rackIndex, int row, int col) {
@@ -582,7 +557,7 @@ public class Game {
         // Add tiles to the move in the correct order
         List<Tile> tilesToPlace = new ArrayList<>();
 
-        if (direction == Direction.HORIZONTAL || direction == Direction.HORIZONTAL_REVERSE) {
+        if (direction == Direction.HORIZONTAL) {
             // Sort by column for horizontal words
             List<Point> points = new ArrayList<>(temporaryPlacements.keySet());
             points.sort(Comparator.comparingInt(p -> p.y));
